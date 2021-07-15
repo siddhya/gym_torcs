@@ -9,8 +9,8 @@ import collections as col
 import os
 import time
 
-
-class TorcsEnv:
+# SIDD: To fix spec not found error while using openai baselines a2c
+class TorcsEnv(gym.Env):
     terminal_judge_start = 500  # Speed limit is applied after this step
     termination_limit_progress = 5  # [km/h], episode terminates if car is running slower than this limit
     default_speed = 50
@@ -52,14 +52,17 @@ class TorcsEnv:
         else:
             self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(2,))
 
-        if vision is False:
-            high = np.array([1., np.inf, np.inf, np.inf, 1., np.inf, 1., np.inf])
-            low = np.array([0., -np.inf, -np.inf, -np.inf, 0., -np.inf, 0., -np.inf])
-            self.observation_space = spaces.Box(low=low, high=high)
-        else:
-            high = np.array([1., np.inf, np.inf, np.inf, 1., np.inf, 1., np.inf, 255])
-            low = np.array([0., -np.inf, -np.inf, -np.inf, 0., -np.inf, 0., -np.inf, 0])
-            self.observation_space = spaces.Box(low=low, high=high)
+        low = np.array([-np.pi , 0, 0, -np.inf, -np.inf, -np.inf, -np.inf, 0])
+        high = np.array([np.pi, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf])
+        self.observation_space = spaces.Box(low=low, high=high)
+        # if vision is False:
+        #     high = np.array([1., np.inf, np.inf, np.inf, 1., np.inf, 1., np.inf])
+        #     low = np.array([0., -np.inf, -np.inf, -np.inf, 0., -np.inf, 0., -np.inf])
+        #     self.observation_space = spaces.Box(low=low, high=high)
+        # else:
+        #     high = np.array([1., np.inf, np.inf, np.inf, 1., np.inf, 1., np.inf, 255])
+        #     low = np.array([0., -np.inf, -np.inf, -np.inf, 0., -np.inf, 0., -np.inf, 0])
+        #     self.observation_space = spaces.Box(low=low, high=high)
 
     def step(self, u):
        #print("Step")
@@ -240,6 +243,16 @@ class TorcsEnv:
         return np.array(rgb, dtype=np.uint8)
 
     def make_observaton(self, raw_obs):
+        obs = [raw_obs['angle'],
+                raw_obs['curLapTime'],
+                raw_obs['damage'],
+                raw_obs['speedX'],
+                raw_obs['speedY'],
+                raw_obs['speedZ'],
+                raw_obs['trackPos'],
+                raw_obs['wheelSpinVel'][0]]
+        return np.array(obs)
+
         if self.vision is False:
             names = ['focus',
                      'speedX', 'speedY', 'speedZ',
